@@ -136,6 +136,11 @@ app.get('/chat/connect', (req, res) => {
   res.send('This endpoint establishes a WebSocket connection.');
 });
 
+
+app.get('/test', (req, res) => {
+  res.status(200).send('Server is up.');
+});
+
 // Start the server
 const PORT = process.env.PORT || 5000;
 server.listen(PORT, () => {
