@@ -1,26 +1,43 @@
-import { useState } from 'react';
+import { useState , useEffect} from 'react';
 import { useNavigate } from 'react-router-dom';
-import axios from 'axios';
-import { ToastContainer, toast } from 'react-toastify';
+import {  toast } from 'react-toastify';
 import Nav from '../Components/Nav';
-
+import { useAuth } from "../context/AuthContext";
 
 const Login = () => {
+    const { authState } = useAuth(); 
+    const { login } = useAuth(); 
     const [passwordVisible, setPasswordVisible] = useState(false);
     const navigate = useNavigate();
-
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [loading, setLoading] = useState(false);
 
-    const handleSubmit = async (event) => {
-        event.preventDefault(); // Prevent default form submission
+    useEffect(() => {
+        if (!authState.isAuthenticated) {
+          navigate('/login'); // Redirect to login if not authenticated
+        }else{
+            navigate('/home')
+        }
+      }, [authState.isAuthenticated, navigate]); // Add dependencies to avoid stale values
+    
+
+    const handleSubmit = async (e) => {
+        e.preventDefault(); // Prevent default form submission
         setLoading(true); // Set loading state to true during API call
-      
-      
-            toast('Login successful');
-            navigate('/home'); // Navigate to home page
+        try {
+          await login(email, password); // Call the login function from context
+          toast.success("Login Successfull")
+          navigate("/home"); // Redirect to a protected route on success
+        } catch (error) {
+          console.error("Login error:", error);
+          toast.error("Login failed. Please check your credentials.");
+        }
+        finally {
+          setLoading(false); // Ensure loading state is reset
+        }
       };
+      
   return (
     <>
     <div className='h-screen flex flex-col '>
@@ -108,7 +125,6 @@ const Login = () => {
         </div>
     </div>
 
-    <ToastContainer />
 </div>
     </div>
     </>

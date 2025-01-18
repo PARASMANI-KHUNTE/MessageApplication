@@ -1,38 +1,46 @@
-import { useState } from 'react';
-import axios from 'axios'
+import { useState ,useEffect } from 'react';
+
 import { useNavigate } from 'react-router-dom';
 // Set the base URL for your API
-const BASE_URL = 'https://chat-app-server-zwfu.onrender.com';
-import { ToastContainer, toast } from 'react-toastify';
+import { useAuth } from "../context/AuthContext";
+
+import {  toast } from 'react-toastify';
 import Nav from '../Components/Nav';
 
 const Signup = () => {
+    const { authState } = useAuth(); 
+    const { signup } = useAuth(); 
+    const navigate = useNavigate();
     const [passwordVisible, setPasswordVisible] = useState(false);
     const [confirmPasswordVisible, setConfirmPasswordVisible] = useState(false);
     const [name , setName] = useState('');
     const [email , setEmail] = useState('');
     const [mobile , setMobile] = useState('');
     const [password , setpassword] = useState('');
-    const navigate = useNavigate();
+    const [loading, setLoading] = useState(false);
+
+       useEffect(() => {
+            if (!authState.isAuthenticated) {
+              navigate('/signup'); // Redirect to login if not authenticated
+            }else{
+                navigate('/home')
+            }
+          }, [authState.isAuthenticated, navigate]); // Add dependencies to avoid stale values
+        
+    
     const handelSignupBtn = async (e) =>{
         e.preventDefault()
         try {
-            const response =await axios.post(`${BASE_URL}/api/auth/signup`,{name,email,mobile,password})
-            if(response.status === 200){
-                alert(`${response.data.message}`)
-                navigate('/login') 
-            }else if ( response.status === 409){
-                alert(`${response.data.message}`)
-            }else if ( response.status === 400){
-                alert(`${response.data.message}`)
-                navigate('/signup')
-            }else{
-                alert(`${response.data.message}`)
-            }
-
-        } catch (error) {
-            alert(`Error - ${error}`)
-        }
+            await signup(name,email,mobile,password); // Call the login function from context
+            navigate("/home"); // Redirect to a protected route on success
+          } catch (error) {
+            console.error("Login error:", error);
+            toast.error("Login failed. Please check your credentials.");
+          }
+          finally {
+            setLoading(false); // Ensure loading state is reset
+          }
+        
     }
 
     return (
@@ -114,11 +122,12 @@ const Signup = () => {
                     </div>
                 </div>
                 <button
-                    type="submit"
-                    className="w-full px-3 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
-                >
-                    Signup
-                </button>
+            type="submit"
+            className={`w-full px-3 py-2 text-white rounded-lg ${loading ? 'bg-gray-400' : 'bg-blue-600 hover:bg-blue-700'}`}
+            disabled={loading}
+        >
+            {loading ? 'Signing up...' : 'Signup'}
+        </button>
                 <p className="font-extralight mt-3">Note :-  Password must contain 1 uppercase and a number</p>
             </form>
             <div className="mt-6">
@@ -144,7 +153,7 @@ const Signup = () => {
                     </button>
                 </div>
             </div>
-            <ToastContainer />
+    
         </div>
         </div>
         </>

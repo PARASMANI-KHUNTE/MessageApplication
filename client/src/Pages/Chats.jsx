@@ -1,6 +1,6 @@
 
 import Navbar from "../Components/Navbar";
-import { ToastContainer, toast } from 'react-toastify';
+
 import ChatRoom from "../Components/ChatRoom";
 import Users from "../Components/Users";
 const Chats = () => {
@@ -20,7 +20,7 @@ const Chats = () => {
           {Chatsid ? <ChatRoom />: <p className="text-center">No Chats Selected</p>}
         </div>
       </div>
-      <ToastContainer />
+
     </>
   );
 };

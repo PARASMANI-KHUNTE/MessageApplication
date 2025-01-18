@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { ToastContainer, toast } from "react-toastify";
+
 const Users = () => {
   const [searchTerm, setSearchTerm] = useState("");
 
@@ -20,9 +20,7 @@ const Users = () => {
         className="border p-2 mb-4 w-full"
       />
 
-    
-
-      <ToastContainer />
+ 
     </div>
   );
 };

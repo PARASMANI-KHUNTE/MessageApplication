@@ -1,16 +1,31 @@
 // import axios from "axios";
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { ToastContainer, toast } from 'react-toastify';
+import { toast } from 'react-toastify';
 import Nav from "../Components/Nav";
 
+import { useHelp } from "../context/HelpContext";
+
 const Help = () => {
+    const { forgotPassword } = useHelp();
     const [email, setEmail] = useState("");
     const navigate = useNavigate();
+
     const handleSubmitBtn = async (e) => {
         e.preventDefault();
-        toast("Otp send to ",email)
-        navigate('/OtpVeification')
+        try {
+            // Attempt to send OTP
+            await forgotPassword(email);
+
+            // Notify the user that OTP was sent
+            toast.success(`OTP sent to ${email}`);
+
+            // Navigate to OTP verification page
+            navigate('/OtpVeification');
+        } catch (error) {
+            console.error("Error:", error);
+            toast.error("Failed. Please check your email.");
+        }
     };
   return (
     <>
@@ -39,8 +54,7 @@ const Help = () => {
             </form>
         </div>
     </div>
-    
-<ToastContainer />
+
     </>
   )
 }

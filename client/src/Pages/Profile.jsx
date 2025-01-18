@@ -1,5 +1,5 @@
 import Navbar from "../Components/Navbar"
-import { ToastContainer, toast } from 'react-toastify';
+import { toast } from 'react-toastify';
 import { useNavigate } from "react-router-dom";
 const Profile = () => {
   const navigate = useNavigate();
@@ -29,7 +29,7 @@ const Profile = () => {
       </div>
       <button onClick={handleLogout} className="fas fa-sign-out  bg-red-600 text-white rounded-lg p-1"></button>
     </div>
-    <ToastContainer />
+  
     </>
   )
 }

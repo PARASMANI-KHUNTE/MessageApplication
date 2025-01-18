@@ -3,18 +3,30 @@ import { useState } from "react";
 
 import { useNavigate } from "react-router-dom";
 import Nav from "../Components/Nav";
-import { ToastContainer, toast } from 'react-toastify';
+import {  toast } from 'react-toastify';
+import { useHelp } from "../context/HelpContext";
 
 // const BASE_URL = "https://chat-app-server-zwfu.onrender.com";
 
 const ResetPassword = () => {
+    const {updatePassword,helpState} =  useHelp()
     const [passwordVisible, setPasswordVisible] = useState(false);
     const [confirmPasswordVisible, setConfirmPasswordVisible] = useState(false);
     const [password , setpassword] = useState('');
     const navigate = useNavigate();
     const handelResetBtn = async (e) =>{
         e.preventDefault()
-                navigate('/login') 
+        try {
+            const userId = helpState.id
+            await updatePassword(userId,password)
+            toast.success("Password Updated Successfully ")
+            navigate('/login') 
+        } catch (error) {
+            console.error(" error:", error);
+            toast.error(" Password Update failled..");
+            navigate('/login') 
+        }
+    
          
         
     }
@@ -76,7 +88,7 @@ const ResetPassword = () => {
                 </button>
                 <p className="font-extralight mt-3">Note :-  Password must contain 1 uppercase and a number</p>
             </form>
-            <ToastContainer />
+      
         </div></div>
     </>
   )

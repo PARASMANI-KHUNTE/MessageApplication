@@ -3,25 +3,31 @@ import { useState } from "react";
 
 import { useNavigate } from "react-router-dom";
 import Nav from "../Components/Nav";
-import { ToastContainer, toast } from 'react-toastify';
-
+import { toast } from 'react-toastify';
+import { useHelp } from "../context/HelpContext";
 // const BASE_URL = "https://chat-app-server-zwfu.onrender.com";
 
 const OtpVeification = () => {
     const navigate = useNavigate();
     const [otp, setOtp] = useState("");
-
+    const {helpState, verifyOtp} = useHelp()
     const handleSubmitBtn = async (e) => {
         e.preventDefault(); // Fix typo
-        toast("OTP Verified Successfully!")
-        navigate("/reset-password");
+        try {
+            const userId = helpState.id;
+            console.log("userId -",userId )
+            await verifyOtp(userId, otp); // Call the login function from context
+            toast.success("OTP Verified Successfully!")
+            navigate("/reset-password"); // Redirect to a protected route on success
+          } catch (error) {
+            console.error("Login error:", error);
+            toast.error("Login failed. Please check your credentials.");
+          }
+        
       
     };
 
-    const handleResendOtp = async () => {toast("OTP Resent Successfully!")}
-        
-        
-    
+
 
     return (
         <>
@@ -49,17 +55,11 @@ const OtpVeification = () => {
                 >
                     Verify
                 </button>
-                <button
-                    type="button"
-                    onClick={handleResendOtp} // Resend OTP logic
-                    className="w-full mt-2 px-3 py-2 bg-gray-300 text-gray-800 rounded-lg hover:bg-gray-400"
-                >
-                    Resend OTP
-                </button>
+               
             </form>
         </div>
          
-<ToastContainer />
+
         </div>
 
            
