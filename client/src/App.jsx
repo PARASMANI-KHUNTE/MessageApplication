@@ -10,6 +10,7 @@ import ResetPassword from "./Pages/ResetPassword"
 import Signup from "./Pages/Signup"
 import Linkify from "./Pages/Linkify"
 import Chats from "./Pages/Chats"
+import ChatApp from './Components/ChatApp'
 const App = () => {
   
   return (
@@ -25,6 +26,7 @@ const App = () => {
         <Route path="/Signup" element={<Signup />}/>
         <Route path="/home" element={<Linkify />}/>
         <Route path="/Chats" element={<Chats />}/>
+        <Route path="/ChatApp" element={<ChatApp />}/>
       </Routes>
     </Router>
   )

@@ -3,8 +3,7 @@ import { toast } from "react-toastify";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import { useEffect, useState } from "react";
-import axios from "axios";
-const baseurl = import.meta.env.VITE_API_BASE_URL;
+import { jwtDecode } from "jwt-decode";
 
 const Profile = () => {
   const navigate = useNavigate();
@@ -12,38 +11,32 @@ const Profile = () => {
   const [userDetails, setUserDetails] = useState({
     userName: "",
     userEmail: "",
-    userProfilePicUrl: "https://via.placeholder.com/100", // Placeholder image
+    userProfilePicUrl: " ", // Placeholder image
   });
   const [loading, setLoading] = useState(true);
 
-  // Fetch user details from the server
-  const fetchUserDetails = async () => {
-    try {
-      setLoading(true);
-      const response = await axios.get(`${baseurl}/api/user/${authState.id}`);
-      
-      if (response.status === 200) {
-        const { name, email, ProfileUrl } = response.data; // Extract the fields from the response
-        setUserDetails({
-          userName: name,
-          userEmail: email,
-          userProfilePicUrl: ProfileUrl || "https://via.placeholder.com/100", // Fallback image
-        });
-      }
-    } catch (error) {
-      console.error("Failed to fetch user details", error);
-      toast.error("Failed to load user details.");
-    } finally {
-      setLoading(false);
-    }
-  };
-
   // Redirect to login if not authenticated
   useEffect(() => {
-    if (!authState.isAuthenticated) {
+    const token = localStorage.getItem('authToken');
+    
+    // If the user is not authenticated or the token is not present
+    if (!authState.isAuthenticated || !token) {
       navigate("/login");
     } else {
-      fetchUserDetails();
+      setLoading(true);
+      try {
+        const decoded = jwtDecode(token);
+   
+        setUserDetails({
+          userName: decoded.name,
+          userEmail: decoded.email,
+          userProfilePicUrl: decoded.ProfileUrl || "https://via.placeholder.com/100", // Fallback image
+        });
+      } catch (error) {
+        toast.error("Invalid token. Please log in again.");
+        navigate("/login");
+      }
+      setLoading(false);
     }
   }, [authState.isAuthenticated, navigate]);
 
@@ -70,22 +63,24 @@ const Profile = () => {
             <div className="flex gap-4 items-center">
               {/* Profile Picture with Fallback */}
               <img
-                className="rounded-full"
-                width={100}
-                height={100}
-                src={userDetails.userProfilePicUrl}
-                alt={`${userDetails.userName}'s profile`}
-              />
+                  className="rounded-full"
+                  width={100}
+                  height={100}
+                  src={userDetails.userProfilePicUrl}
+                  alt={`${userDetails.userName}'s profile`}
+                  onError={(e) => e.target.src = "https://via.placeholder.com/100"} // Fallback on error
+                />
+
               <div>
                 {/* User Info */}
                 <p className="text-xl font-semibold text-gray-800">{userDetails.userName}</p>
                 <p className="text-gray-500">{userDetails.userEmail}</p>
-                <button
+                {/* <button
                   className="bg-blue-600 text-white rounded-lg px-4 py-2 mt-2"
                   aria-label="Edit Profile"
                 >
                   <i className="fas fa-edit mr-2"></i>Edit Profile
-                </button>
+                </button> */}
               </div>
             </div>
 

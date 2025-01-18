@@ -13,7 +13,7 @@ const Navbar = () => {
           </div>
           <ul className="flex gap-6 font-medium">
             <li className="hover:underline">
-              <Link to={'/Chats'}>Chats</Link>
+              <Link to={'/ChatApp'}>Chats</Link>
             </li>
             <li className="hover:underline">
               <Link to={'/profile'}>Profile</Link>
