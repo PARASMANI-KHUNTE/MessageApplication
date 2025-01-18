@@ -7,12 +7,15 @@ import { AuthProvider } from './context/AuthContext.jsx';
 import { HelpProvider } from './context/HelpContext.jsx';
 import { ToastContainer } from 'react-toastify';  // Import the ToastContainer
 import 'react-toastify/dist/ReactToastify.css';   
+import { GoogleOAuthProvider } from '@react-oauth/google';
 
 createRoot(document.getElementById('root')).render(
   <StrictMode>
     <AuthProvider>
     <HelpProvider>
-        <App />
+    <GoogleOAuthProvider clientId={import.meta.env.VITE_GOOGLE_CLIENT_ID}>
+      <App />
+    </GoogleOAuthProvider>
         <ToastContainer />  {/* Place ToastContainer here */}
       </HelpProvider>
     </AuthProvider>

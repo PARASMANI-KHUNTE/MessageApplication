@@ -1,208 +1,60 @@
 const express = require('express');
 const router = express.Router();
-const jwt = require("jsonwebtoken");
-const session = require("express-session");
-const {generateToken,verifyToken} = require('../utils/tokenProvider')
-const GoogleStrategy = require("passport-google-oauth20").Strategy;
-// const LinkedInStrategy = require("passport-linkedin-oauth2").Strategy;
-// const FacebookStrategy = require("passport-facebook").Strategy;
+const {generateToken} = require('../utils/tokenProvider')
 const User = require('../models/User');
-const passport = require("passport");
 
-router.use(session({ secret: "secret", resave: false, saveUninitialized: true }));
 
-router.use(passport.initialize());
-router.use(passport.session());
+router.post('/GoogleLogin', async (req, res) => {
+  const { googleId, name, email, picture } = req.body;
 
-// Serialize and deserialize user
-passport.serializeUser((user, done) => done(null, user));
-passport.deserializeUser((user, done) => done(null, user));
-
-// Google Strategy
-passport.use(
-  new GoogleStrategy(
-    {
-      clientID: process.env.GOOGLE_CLIENT_ID,
-      clientSecret: process.env.GOOGLE_CLIENT_SECRET,
-      callbackURL: "/api/social/auth/google/callback"
-    },
-    async (accessToken, refreshToken, profile, done) => {
-      try {
-        const email = profile.emails[0].value;
-        const googleId = profile.id;
-        const name = profile.displayName;
-        const ProfileUrl = profile.photos[0]?.value;
-
-        let user = await User.findOne({ email });
-
-        if (!user) {
-          user = await User.create({
-            name,
-            email,
-            googleId,
-            ProfileUrl,
-          });
-        }
-
-        return done(null, user);
-      } catch (err) {
-        return done(err, null);
-      }
-    }
-  )
-);
-
-// // LinkedIn Strategy
-// passport.use(
-//   new LinkedInStrategy(
-//     {
-//       clientID: process.env.LINKEDIN_CLIENT_ID,
-//       clientSecret: process.env.LINKEDIN_CLIENT_SECRET,
-//       callbackURL: "/api/social/auth/linkedin/callback",
-//       scope: ["r_liteprofile", "r_emailaddress"]
-//     },
-//     async (accessToken, refreshToken, profile, done) => {
-//       try {
-//         const email = profile.emails[0].value;
-//         const linkedinId = profile.id;
-//         const name = profile.displayName;
-//         const ProfileUrl = profile.photos[3]?.value;
-
-//         let user = await User.findOne({ email });
-
-//         if (!user) {
-//           user = await User.create({
-//             name,
-//             email,
-//             linkedinId,
-//             ProfileUrl,
-//           });
-//         }
-
-//         return done(null, user);
-//       } catch (err) {
-//         console.error("Error in LinkedIn callback:", err);
-//         return done(err, null);
-//       }
-//     }
-//   )
-// );
-
-// // Facebook Strategy
-// passport.use(
-//   new FacebookStrategy(
-//     {
-//       clientID: process.env.FACEBOOK_CLIENT_ID,
-//       clientSecret: process.env.FACEBOOK_CLIENT_SECRET,
-//       callbackURL: "/api/social/auth/facebook/callback",
-//       profileFields: ["id", "emails", "name", "picture"]
-//     },
-//     async (accessToken, refreshToken, profile, done) => {
-//       try {
-//         const email = profile.emails[0].value;
-//         const facebookId = profile.id;
-//         const name = profile.displayName;
-//         const ProfileUrl = profile.photos[0]?.value;
-
-//         let user = await User.findOne({ email });
-
-//         if (!user) {
-//           user = await User.create({
-//             name,
-//             email,
-//             facebookId,
-//             ProfileUrl,
-//           });
-//         }
-
-//         return done(null, user);
-//       } catch (err) {
-//         console.error("Error in Facebook callback:", err);
-//         return done(err, null);
-//       }
-//     }
-//   )
-// );
-
-// Routes
-// Google Auth
-router.get("/auth/google", passport.authenticate("google", { scope: ["profile", "email"] }));
-router.get(
-  "/auth/google/callback",
-  passport.authenticate("google", { failureRedirect: "/failure" }),
-  async (req, res) => {
-    try {
-      const user = req.user;
-      const payload = {
-          id: user._id,
-          name: user.name,
-          email: user.email,
-        }
-      const token =  await generateToken(payload)
-      res.status(200).redirect(`http://localhost:5173/home?token=${token}`);
-    } catch (err) {
-     
-      res.redirect("/failure");
-    }
+  if (!googleId || !name || !email || !picture) {
+    return res.status(400).json({ message: "Missing required fields" });
   }
-);
 
-// // LinkedIn Auth
-// router.get("/auth/linkedin", passport.authenticate("linkedin"));
+  try {
+    let user = await User.findOne({ googleId }).lean(); // Avoid redundant queries
 
-// router.get(
-//   "/auth/linkedin/callback",
-//   passport.authenticate("linkedin", { failureRedirect: "/failure" }),
-//   async (req, res) => {
-//     try {
-//       const user = req.user;
-//       const token = jwt.sign(
-//         {
-//           id: user._id,
-//           name: user.name,
-//           email: user.email,
-//         },
-//         process.env.JWT_SECRET || "JWT_SECRET",
-//         { expiresIn: "1h" }
-//       );
-//       res.status(200).redirect(`http://localhost:5173/home?token=${token}`);
-//     } catch (err) {
-//       console.error("Error in LinkedIn callback:", err);
-//       res.redirect("/failure");
-//     }
-//   }
-// );
+    if (!user) {
+      // Create a new user if not found
+      user = await User.create({
+        name,
+        email,
+        googleId,
+        ProfileUrl: picture,
+      });
 
-// // Facebook Auth
-// router.get("/auth/facebook", passport.authenticate("facebook", { scope: ["email"] }));
+      const payload = {
+        userId: user._id,
+        name: user.name,
+        ProfileUrl: user.ProfileUrl,
+        email: user.email,
+      };
 
-// router.get(
-//   "/auth/facebook/callback",
-//   passport.authenticate("facebook", { failureRedirect: "/failure" }),
-//   async (req, res) => {
-//     try {
-//       const user = req.user;
-//       const token = jwt.sign(
-//         {
-//           id: user._id,
-//           name: user.name,
-//           email: user.email,
-//         },
-//         process.env.JWT_SECRET || "JWT_SECRET",
-//         { expiresIn: "1h" }
-//       );
-//       res.status(200).redirect(`http://localhost:5173/home?token=${token}`);
-//     } catch (err) {
-//       console.error("Error in Facebook callback:", err);
-//       res.redirect("/failure");
-//     }
-//   }
-// );
+      const token = generateToken(payload);
+      return res.status(200).json({
+        authToken: token,
+        message: "Account has been created",
+      });
+    }
 
-router.get("/failure", (req, res) => {
-  res.json({
-    message: "Failed to authenticate with the social platform"
-  });
+    // If user exists, generate token
+    const payload = {
+      userId: user._id,
+      name: user.name,
+      ProfileUrl: user.ProfileUrl,
+      email: user.email,
+    };
+
+    const token = generateToken(payload);
+    return res.status(200).json({
+      authToken: token,
+      message: "Login Successful",
+    });
+  } catch (error) {
+    console.error("Error in GoogleLogin route:", error);
+    return res.status(500).json({ message: "Internal server error" });
+  }
 });
+
 
 module.exports = router;

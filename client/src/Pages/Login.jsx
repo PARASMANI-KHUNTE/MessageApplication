@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import {  toast } from 'react-toastify';
 import Nav from '../Components/Nav';
 import { useAuth } from "../context/AuthContext";
-
+import ContinueWithGoogle from '../Components/ContinueWithGoogle';
 const Login = () => {
     const { authState } = useAuth(); 
     const { login } = useAuth(); 
@@ -37,6 +37,9 @@ const Login = () => {
           setLoading(false); // Ensure loading state is reset
         }
       };
+
+
+      
       
   return (
     <>
@@ -104,13 +107,15 @@ const Login = () => {
     <div className="mt-6">
         <p className="text-gray-700 mb-2">Or continue with:</p>
         <div className="flex space-x-4">
-            <button
+            <ContinueWithGoogle/>
+            {/* <button
                 className="flex items-center justify-center px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700"
                 onClick={()=>toast("Google Coming soon")}
             >
                 Google
-            </button>
-            <button
+            </button> */}
+           
+            {/* <button
                 className="flex items-center justify-center px-4 py-2 bg-gray-300 text-gray-700 rounded-lg hover:bg-gray-400"
                 onClick={() => toast('Facebook coming soon')}
             >
@@ -121,7 +126,7 @@ const Login = () => {
                 onClick={() => toast('LinkedIn coming soon')}
             >
                 LinkedIn
-            </button>
+            </button> */}
         </div>
     </div>
 

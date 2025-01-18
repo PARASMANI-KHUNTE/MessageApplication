@@ -3,6 +3,7 @@ import { useState ,useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 // Set the base URL for your API
 import { useAuth } from "../context/AuthContext";
+import ContinueWithGoogle from '../Components/ContinueWithGoogle';
 
 import {  toast } from 'react-toastify';
 import Nav from '../Components/Nav';
@@ -42,6 +43,10 @@ const Signup = () => {
           }
         
     }
+
+
+   
+      
 
     return (
         <>
@@ -133,7 +138,8 @@ const Signup = () => {
             <div className="mt-6">
                 <p className="text-gray-700 mb-2">Or continue with:</p>
                 <div className="flex space-x-4">
-                    <button
+                <ContinueWithGoogle/>
+                    {/* <button
                         className="flex items-center justify-center px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700"
                         onClick={() => toast('Google comming soon')}
                     >
@@ -150,7 +156,7 @@ const Signup = () => {
                         onClick={() => toast('LinkedIn comming soon')}
                     >
                         LinkedIn
-                    </button>
+                    </button> */}
                 </div>
             </div>
     

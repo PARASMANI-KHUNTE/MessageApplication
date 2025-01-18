@@ -1,58 +1,64 @@
-import { createContext , useState ,useContext, useEffect} from "react";
-const AuthContext = createContext();
+import { createContext, useState, useContext, useEffect, useCallback } from "react";
 import axios from "axios";
-import {jwtDecode} from 'jwt-decode'
+import {jwtDecode} from "jwt-decode";
+
+const AuthContext = createContext();
 const baseurl = import.meta.env.VITE_API_BASE_URL;
+
 export const AuthProvider = ({ children }) => {
   const [authState, setAuthState] = useState({
     isAuthenticated: false,
     user: null,
     token: null,
-    id : null,
-    email : null,
+    id: null,
+    email: null,
+    profileUrl: null,
+    googleId: null,
   });
 
-  const handleSignup = async (name,email,mobile,password)=>{
+  const handleSignup = async (name, email, mobile, password) => {
     try {
-      const response =await axios.post(`${baseurl}/api/auth/signup`,{name,email,mobile,password})
-       if(response.status === 200){
-        handleLogin(email,password)
-       }
+      const response = await axios.post(`${baseurl}/api/auth/signup`, {
+        name,
+        email,
+        mobile,
+        password,
+      });
+      if (response.status === 200) {
+        await handleLogin(email, password);
+      }
     } catch (error) {
       console.error("SignUp failed:", error);
       throw error;
     }
-  }
+  };
 
-
-const handleLogin = async (email, password) => {
-  try {
-    const response = await axios.post(`${baseurl}/api/auth/login`, { email, password });
-    
-    if (response.status === 200) {
-      const { token } = response.data;
-      
-      // Decode the JWT to extract the payload
-      const decoded = jwtDecode(token);
-      
-      // Store token in localStorage for persistence
-      localStorage.setItem("authToken", token);
-      
-      // Update auth state
-      setAuthState({
-        isAuthenticated: true,
-        user: decoded.name, // Assuming 'name' is part of the decoded payload
-        token: token,
-        id: decoded.id, // Assuming 'id' is part of the decoded payload
-        email: email,
+  const handleLogin = async (email, password) => {
+    try {
+      const response = await axios.post(`${baseurl}/api/auth/login`, {
+        email,
+        password,
       });
-    }
-  } catch (error) {
-    console.error("Login failed:", error);
-    throw error;
-  }
-};
 
+      if (response.status === 200) {
+        const { token } = response.data;
+
+        const decoded = jwtDecode(token); // Decode the token
+        localStorage.setItem("authToken", token); // Store token
+
+        setAuthState({
+          isAuthenticated: true,
+          user: decoded.name,
+          token,
+          id: decoded.id,
+          email,
+        });
+      }
+    } catch (error) {
+      console.error("Login failed:", error);
+      throw error;
+    }
+  };
 
   const handleLogout = () => {
     localStorage.removeItem("authToken");
@@ -60,48 +66,91 @@ const handleLogin = async (email, password) => {
       isAuthenticated: false,
       user: null,
       token: null,
-      id : null,
-      email : null
+      id: null,
+      email: null,
+      profileUrl: null,
+      googleId: null,
     });
   };
 
-  const validateToken = async (token) => {
+  // Memoize validateToken using useCallback
+  const validateToken = useCallback(async (token) => {
     try {
-      // Send the token to the server for verification
       const response = await axios.post(`${baseurl}/api/auth/verify-token`, { token });
-  
-      // Check if the response status is 200 and token is valid
       if (response.status === 200 && response.data.isValid) {
-        // Update authentication state with the user and payload from response
         const { payload } = response.data;
-  
+
         setAuthState({
           isAuthenticated: true,
-          user: payload.payload.name,  // Accessing nested payload
-          token: token,  // Store the token in state
-          id: payload.payload.id,  // Accessing nested payload
-          email: payload.payload.email,  // Accessing nested payload
+          user: payload.name,
+          token,
+          id: payload.id,
+          email: payload.email,
         });
       } else {
-        // If the token is invalid or unauthorized, log out
         handleLogout();
       }
     } catch (error) {
-      // If an error occurs (e.g., token verification fails), log out
+      console.error("Token validation failed:", error);
       handleLogout();
     }
-  };
-  
+  }, []); // Empty dependency array since validateToken doesn't rely on external variables.
 
- 
+  const handleGoogleLogin = async (googleId, name, email, picture) => {
+    if (!googleId || !name || !email || !picture) {
+      console.error("Missing required fields for Google Login");
+      return;
+    }
+
+    try {
+      const response = await axios.post(`${baseurl}/api/social/GoogleLogin`, {
+        googleId,
+        name,
+        email,
+        picture,
+      });
+
+      if (response.status === 200) {
+        const { authToken } = response.data;
+        const decoded = jwtDecode(authToken);
+      
+        localStorage.setItem("authToken", authToken); // Store token
+
+        setAuthState({
+          isAuthenticated: true,
+          user: decoded.name,
+          token: authToken,
+          id: decoded.userId,
+          email: decoded.email,
+          profileUrl: decoded.profileUrl,
+        });
+      } else {
+        console.error("Invalid response from server");
+        handleLogout();
+      }
+    } catch (error) {
+      console.error("Google login failed:", error.response?.data || error.message);
+      throw error;
+    }
+  };
 
   useEffect(() => {
     const token = localStorage.getItem("authToken");
-    if (token) validateToken(token);
-  }, []);
+    if (token) {
+      validateToken(token); // Use memoized validateToken
+    }
+  }, [validateToken]); // Dependency array includes validateToken
 
   return (
-    <AuthContext.Provider value={{ authState,signup: handleSignup,  login: handleLogin, logout: handleLogout }}>
+    <AuthContext.Provider
+      value={{
+        authState,
+        signup: handleSignup,
+        login: handleLogin,
+        logout: handleLogout,
+        LoginWithGoogle: handleGoogleLogin,
+      }}
+    >
       {children}
     </AuthContext.Provider>
   );
