@@ -1,7 +1,19 @@
 import { Link } from "react-router-dom";
 import Nav from "../Components/Nav";
-
+import { useEffect } from "react";
+import axios from "axios";
+const baseurl = import.meta.env.VITE_API_BASE_URL;
 const Home = () => {
+useEffect(() => {
+    const fetchData = async () => {
+      try {
+        await axios.get(`${baseurl}`);
+      } catch (error) {
+        console.error("Error fetching data:", error);
+      }
+    };
+    fetchData();
+  }, []);
   return (
     <>
       <div className="min-h-screen flex flex-col">
