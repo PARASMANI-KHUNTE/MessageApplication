@@ -3,6 +3,7 @@ import axios from "axios";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import { jwtDecode } from "jwt-decode";
+import Navbar from "../Components/Navbar";
 const BASE_URL = import.meta.env.VITE_API_BASE_URL;
 
 // Create Context
@@ -136,6 +137,9 @@ const ChatApp = () => {
   const filteredUsers = users.filter((u) => u.email !== user?.email && u.name.toLowerCase().includes(searchTerm.toLowerCase()));
 
   return (
+    <>
+     <Navbar />
+   
     <div className="container mx-auto p-4">
       <h1 className="text-2xl font-bold mb-4">Chat Application</h1>
 
@@ -213,6 +217,7 @@ const ChatApp = () => {
 
       <ToastContainer />
     </div>
+    </>
   );
 };
 
