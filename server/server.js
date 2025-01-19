@@ -6,7 +6,11 @@ const bodyParser = require('body-parser');
 const cors = require('cors');
 const dotenv = require('dotenv');
 dotenv.config();
-
+const path = require("path");
+app.use(express.static(path.join(__dirname, "dist")));
+app.get("*", (req, res) => {
+  res.sendFile(path.join(__dirname, "dist", "index.html"));
+});
 // Create an Express app and an HTTP server
 const app = express();
 const server = http.createServer(app);
